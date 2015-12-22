@@ -2,18 +2,10 @@ import argparse
 import sqlite3
 import sys
 
-import requests
-
 from eve import get_region_data
 from eve import get_solarsystem_data
 from eve import get_type_data
 
-"""
-CREST market item look-up template:
-https://public-crest.eveonline.com/market/10000002/orders/sell/?type=https://public-crest.eveonline.com/types/683/
-"""
-
-CREST_BASE_URL = "https://public-crest.eveonline.com/"
 DB_NAME_EVE = "eve.db"
 DB_NAME_TASKS = "tasks.db"
 
@@ -31,16 +23,6 @@ def parse_args():
     parser.add_argument("-l", "--lesser", action="store_true", help="Notify when given price is LESS than or EQUAL real-time market price.")
 
     return parser.parse_args()
-
-
-def construct_url(region_id, type_id, buy_or_sell):
-    return "{baseurl}market/{regionid}/orders/{buyorsell}/?type={baseurl}types/{typeid}/".format(
-        baseurl=CREST_BASE_URL, regionid=region_id, buyorsell=buy_or_sell, typeid=type_id)
-
-
-def fetch_price_data(url):
-    result = requests.get(url)
-    return result.json()
 
 
 def save_task(data):
@@ -68,9 +50,9 @@ def prepare_task(args):
         sys.exit("ERROR: Please include a region or solar system to monitor.")
 
     if args.buy:
-        order_type = "Buy"
+        order_type = "buy"
     elif args.sell:
-        order_type = "Sell"
+        order_type = "sell"
     else:
         sys.exit("ERROR: Please include either the buy (-b, --buy), or sell (-s, --sell) option.")
 
@@ -104,10 +86,22 @@ def narrow_to_solarsystem(data, solarsystem):
     return results
 
 
+def print_receipt(data):
+    typename_len = len(data['typename'])
+    print()
+    print(data['typename'])
+    print("-" * typename_len)
+    print("{:,.2f}".format(data['price']))
+    print(data['locationname'])
+    print(data['ordertype'].capitalize())
+    print(data['interest'])
+
+
 def main():
     args = parse_args()
     task_data = prepare_task(args)
     save_task(task_data)
+    print_receipt(task_data)
 
 if __name__ == '__main__':
     main()
