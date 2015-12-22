@@ -34,8 +34,8 @@ def query_db(query):
         return cursor.fetchall()
 
 
-def construct_url(region_id, type_id):
-    return "https://public-crest.eveonline.com/market/{regionid}/orders/sell/?type=https://public-crest.eveonline.com/types/{typeid}/".format(regionid=region_id, typeid=type_id)
+def construct_url(region_id, type_id, buy_or_sell):
+    return "{baseurl}market/{regionid}/orders/{buyorsell}/?type={baseurl}types/{typeid}/".format(baseurl=CREST_BASE_URL, regionid=region_id, buyorsell=buy_or_sell, typeid=type_id)
 
 
 def fetch_price_data(url):
@@ -44,21 +44,35 @@ def fetch_price_data(url):
 
 
 def main(args):
+    if args.region:
+        region_name = args.region.capitalize()
+        location_query_str = """SELECT regionid FROM regions WHERE regionname='{}'""".format(region_name)
+        location_query = query_db(location_query_str)
+        region_id = location_query[0][0]
+    elif args.solarsystem:
+        solarsystem_name = args.solarsystem.capitalize()
+        location_query_str = """SELECT regionid FROM solarsystems WHERE solarsystemname='{}'""".format(solarsystem_name)
+        location_query = query_db(location_query_str)
+        region_id = location_query[0][0]
+    else:
+        sys.exit("ERROR: Please include a region or solar system to monitor.")
+
+    if args.buy:
+        buy_or_sell = "buy"
+    elif args.sell:
+        buy_or_sell = "sell"
+    else:
+        sys.exit("ERROR: Please include either the buy (-b, --buy), or sell (-s, --sell) option.")
+
     item = args.item
     price = args.price
 
-    if args.region:
-        location = args.region.capitalize()
-    elif args.solarsystem:
-        location = args.solarsystem.capitalize()
-    else:
-        sys.exit("ERROR: Please include a region or solar system to monitor.")
-    # region_id_query = """SELECT regionid FROM solarsystems WHERE solarsystemname LIKE '%{}%'""".format(location)
-    # region_id = query_db(region_id_query)[0][0]
-    # type_id_query = """SELECT typeid FROM invTypes WHERE typename LIKE '%{}%'""".format(item)
-    # type_id = query_db(type_id_query)[0][0]
+    type_query_str = """SELECT typeid FROM invTypes WHERE typename LIKE '%{}%'""".format(item)
+    type_query = query_db(type_query_str)
+    type_id = type_query[0][0]
 
-    # url = construct_url(region_id, type_id)
+    url = construct_url(region_id, type_id, buy_or_sell)
+    print(url)
     # price_data = fetch_price_data(url)
 
     # prices = []
