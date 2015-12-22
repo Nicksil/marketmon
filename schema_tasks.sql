@@ -1,8 +1,9 @@
 CREATE TABLE tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    price REAL NOT NULL,
     typeid INTEGER NOT NULL,
     typename TEXT NOT NULL,
     locationtype TEXT NOT NULL,
-    locationid INTEGER NOT NULL,
+    regionid INTEGER NOT NULL,
     locationname TEXT NOT NULL
 );

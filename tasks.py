@@ -9,3 +9,4 @@ def get_tasks():
         cursor.execute("""SELECT * FROM tasks""")
 
         return cursor.fetchall()
+

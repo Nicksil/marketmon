@@ -4,6 +4,10 @@ import sys
 
 import requests
 
+from eve import get_region_data
+from eve import get_solarsystem_data
+from eve import get_type_data
+
 """
 CREST market item look-up template:
 https://public-crest.eveonline.com/market/10000002/orders/sell/?type=https://public-crest.eveonline.com/types/683/
@@ -29,16 +33,9 @@ def parse_args():
     return args
 
 
-def query_db(query):
-    with sqlite3.connect(DB_NAME_EVE) as conn:
-        cursor = conn.cursor()
-        cursor.execute(query)
-        return cursor.fetchone()
-
-
 def save_to_db(data):
     with sqlite3.connect(DB_NAME_TASKS) as conn:
-        conn.execute('INSERT INTO tasks (typeid, typename, locationtype, locationid, locationname) VALUES (?, ?, ?, ?, ?)', data)
+        conn.execute('INSERT INTO tasks (price, typeid, typename, locationtype, regionid, locationname) VALUES (?, ?, ?, ?, ?, ?)', data)
 
 
 def construct_url(region_id, type_id, buy_or_sell):
@@ -58,21 +55,14 @@ def save_task(data):
 def main(args):
     if args.region:
         location_type = "Region"
-        region_name = args.region.title()
-        location_query_str = """SELECT * FROM regions WHERE regionname='{}'""".format(region_name)
-        location_query = query_db(location_query_str)
-        region_id = location_query[0]
-        location_id = region_id
-        location_name = location_query[1]
+        region_name = args.region
+        region_id, location_name = get_region_data(region_name)
     elif args.solarsystem:
         location_type = "SolarSystem"
-        solarsystem_name = args.solarsystem.title()
-        location_query_str = """SELECT regionid, solarsystemid, solarsystemname FROM solarsystems WHERE solarsystemname='{}'""".format(solarsystem_name)
-        location_query = query_db(location_query_str)
-        region_id = location_query[0]
-        solarsystem_id = location_query[1]
-        location_id = solarsystem_id
-        location_name = location_query[2]
+        solarsystem_name = args.solarsystem
+        solarsystem_data = get_solarsystem_data(solarsystem_name)
+        region_id = solarsystem_data[0]
+        location_name = solarsystem_data[3]
     else:
         sys.exit("ERROR: Please include a region or solar system to monitor.")
 
@@ -83,23 +73,18 @@ def main(args):
     else:
         sys.exit("ERROR: Please include either the buy (-b, --buy), or sell (-s, --sell) option.")
 
-    item = args.item
+    type_name = args.item
     price = args.price
 
-    type_query_str = """SELECT * FROM invTypes WHERE typename LIKE '%{}%'""".format(item)
-    type_query = query_db(type_query_str)
-    type_id = type_query[0]
-    type_name = type_query[1]
+    type_id, type_name = get_type_data(type_name)
 
     url = construct_url(region_id, type_id, buy_or_sell)
 
     price_data = fetch_price_data(url)
     prices = sorted([i['price'] for i in price_data['items']])
 
-    data = [type_id, type_name, location_type, location_id, location_name]
+    data = [price, type_id, type_name, location_type, region_id, location_name]
     save_task(data)
-
-
 
     # if args.buy:
     #     print("{:,.2f}".format(prices[-1]))
