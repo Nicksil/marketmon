@@ -5,5 +5,7 @@ CREATE TABLE tasks (
     typename TEXT NOT NULL,
     locationtype TEXT NOT NULL,
     regionid INTEGER NOT NULL,
-    locationname TEXT NOT NULL
+    locationname TEXT NOT NULL,
+    ordertype TEXT NOT NULL,
+    interest TEXT NOT NULL
 );

@@ -27,15 +27,10 @@ def parse_args():
     parser.add_argument("-b", "--buy", action="store_true", help="Choose to monitor buy prices.")
     parser.add_argument("-s", "--sell", action="store_true", help="Choose to monitor sell prices.")
     parser.add_argument("-p", "--price", type=float, help="The price point you wish to compare to monitored data.")
+    parser.add_argument("-g", "--greater", action="store_true", help="Notify when given price is GREATER than or EQUAL real-time market price.")
+    parser.add_argument("-l", "--lesser", action="store_true", help="Notify when given price is LESS than or EQUAL real-time market price.")
 
-    args = parser.parse_args()
-
-    return args
-
-
-def save_to_db(data):
-    with sqlite3.connect(DB_NAME_TASKS) as conn:
-        conn.execute('INSERT INTO tasks (price, typeid, typename, locationtype, regionid, locationname) VALUES (?, ?, ?, ?, ?, ?)', data)
+    return parser.parse_args()
 
 
 def construct_url(region_id, type_id, buy_or_sell):
@@ -49,10 +44,18 @@ def fetch_price_data(url):
 
 
 def save_task(data):
-    save_to_db(data)
+    with sqlite3.connect(DB_NAME_TASKS) as conn:
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO tasks (price, typeid, typename, locationtype, regionid, locationname, ordertype, interest) \
+                        VALUES (:price, :typeid, :typename, :locationtype, :regionid, :locationname, :ordertype, :interest)', data)
 
 
-def main(args):
+def prepare_task(args):
+    price = args.price
+
+    type_name = args.item
+    type_id, type_name = get_type_data(type_name)
+
     if args.region:
         location_type = "Region"
         region_name = args.region
@@ -60,37 +63,51 @@ def main(args):
     elif args.solarsystem:
         location_type = "SolarSystem"
         solarsystem_name = args.solarsystem
-        solarsystem_data = get_solarsystem_data(solarsystem_name)
-        region_id = solarsystem_data[0]
-        location_name = solarsystem_data[3]
+        region_id, location_name = get_solarsystem_data(solarsystem_name)
     else:
         sys.exit("ERROR: Please include a region or solar system to monitor.")
 
     if args.buy:
-        buy_or_sell = "buy"
+        order_type = "Buy"
     elif args.sell:
-        buy_or_sell = "sell"
+        order_type = "Sell"
     else:
         sys.exit("ERROR: Please include either the buy (-b, --buy), or sell (-s, --sell) option.")
 
-    type_name = args.item
-    price = args.price
+    if args.greater:
+        interest = "Greater"
+    elif args.lesser:
+        interest = "Lesser"
+    else:
+        sys.exit("Error: Please include GREATER (-g, --greater) or LESSER (-l, --lesser) interest option.")
 
-    type_id, type_name = get_type_data(type_name)
+    task_data = {
+        "price": price,
+        "typeid": type_id,
+        "typename": type_name,
+        "locationtype": location_type,
+        "regionid": region_id,
+        "locationname": location_name,
+        "ordertype": order_type,
+        "interest": interest,
+    }
 
-    url = construct_url(region_id, type_id, buy_or_sell)
+    return task_data
 
-    price_data = fetch_price_data(url)
-    prices = sorted([i['price'] for i in price_data['items']])
 
-    data = [price, type_id, type_name, location_type, region_id, location_name]
-    save_task(data)
+def narrow_to_solarsystem(data, solarsystem):
+    results = []
+    for item in data['items']:
+        if solarsystem.lower() in item['location']['name'].lower():
+            results.append(item)
 
-    # if args.buy:
-    #     print("{:,.2f}".format(prices[-1]))
-    # else:
-    #     print("{:,.2f}".format(prices[0]))
+    return results
+
+
+def main():
+    args = parse_args()
+    task_data = prepare_task(args)
+    save_task(task_data)
 
 if __name__ == '__main__':
-    args = parse_args()
-    main(args)
+    main()

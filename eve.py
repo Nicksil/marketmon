@@ -40,7 +40,7 @@ def get_region_id(region_name):
 
 
 def get_solarsystem_data(solarsystem_name):
-    query_str = """SELECT * FROM solarsystems WHERE solarsystemname LIKE '%{}%'""".format(solarsystem_name)
+    query_str = """SELECT regionid, solarsystemname FROM solarsystems WHERE solarsystemname LIKE '%{}%'""".format(solarsystem_name)
     query_result = query_db(query_str)
 
     return query_result
