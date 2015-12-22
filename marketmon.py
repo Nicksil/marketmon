@@ -12,6 +12,21 @@ CREST_BASE_URL = "https://public-crest.eveonline.com/"
 DB_NAME = "eve.db"
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-i", "--item", help="Which item, or market type, to monitor.")
+    parser.add_argument("-r", "--region", help="The region in which you want price data to be monitored.")
+    parser.add_argument("-y", "--solarsystem", help="The solar system in which you want price data to be monitored.")
+    parser.add_argument("-b", "--buy", action="store_true", help="Choose to monitor buy prices.")
+    parser.add_argument("-s", "--sell", action="store_true", help="Choose to monitor sell prices.")
+    parser.add_argument("-p", "--price", type=float, help="The price point you wish to compare to monitored data.")
+
+    args = parser.parse_args()
+
+    return args
+
+
 def query_db(query):
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
@@ -28,7 +43,16 @@ def fetch_price_data(url):
     return result.json()
 
 
-def main():
+def main(args):
+    item = args.item
+    price = args.price
+
+    if args.region:
+        location = args.region.capitalize()
+    elif args.solarsystem:
+        location = args.solarsystem.capitalize()
+    else:
+        sys.exit("ERROR: Please include a region or solar system to monitor.")
     # region_id_query = """SELECT regionid FROM solarsystems WHERE solarsystemname LIKE '%{}%'""".format(location)
     # region_id = query_db(region_id_query)[0][0]
     # type_id_query = """SELECT typeid FROM invTypes WHERE typename LIKE '%{}%'""".format(item)
@@ -48,10 +72,5 @@ def main():
     pass
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("item", help="Which item, or market type, to monitor.")
-    parser.add_argument("location", help="Enter a region OR solar system.")
-    parser.add_argument("buy_or_sell", help="Choose to monitor buy or sell prices.")
-    parser.add_argument("price", help="The price point you wish to compare to monitored data.")
-    parser.parse_args()
-    main()
+    args = parse_args()
+    main(args)
