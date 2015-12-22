@@ -2,9 +2,9 @@ import csv
 import sqlite3
 
 db_filename_eve = 'eve.db'
-db_filename_user = 'user.db'
+db_filename_tasks = 'tasks.db'
 schema_filename_eve = 'schema_eve.sql'
-schema_filename_user = 'schema_user.sql'
+schema_filename_tasks = 'schema_tasks.sql'
 
 invtypes = []
 regions = []
@@ -19,7 +19,7 @@ with sqlite3.connect(db_filename_eve) as conn:
     with open('invTypes.csv') as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
-            invtypes.append((int(row[0]), row[1]))
+            invtypes.append((int(row[0]), row[1].strip()))
 
     conn.executemany('INSERT INTO invTypes VALUES (?, ?)', invtypes)
 
@@ -44,7 +44,7 @@ with sqlite3.connect(db_filename_eve) as conn:
 
     conn.executemany('INSERT INTO solarsystems VALUES (?, ?, ?, ?)', solarsystems)
 
-with sqlite3.connect(db_filename_user) as conn:
-    with open(schema_filename_user, 'rt') as f:
+with sqlite3.connect(db_filename_tasks) as conn:
+    with open(schema_filename_tasks, 'rt') as f:
         schema = f.read()
     conn.executescript(schema)
