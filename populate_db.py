@@ -1,16 +1,18 @@
 import csv
 import sqlite3
 
-db_filename = 'eve.db'
-scema_filename = 'schema.sql'
+db_filename_eve = 'eve.db'
+db_filename_user = 'user.db'
+schema_filename_eve = 'schema_eve.sql'
+schema_filename_user = 'schema_user.sql'
 
 invtypes = []
 regions = []
 constellations = []
 solarsystems = []
 
-with sqlite3.connect(db_filename) as conn:
-    with open(scema_filename, 'rt') as f:
+with sqlite3.connect(db_filename_eve) as conn:
+    with open(schema_filename_eve, 'rt') as f:
         schema = f.read()
     conn.executescript(schema)
 
@@ -41,3 +43,8 @@ with sqlite3.connect(db_filename) as conn:
             solarsystems.append((int(row[0]), int(row[1]), int(row[2]), row[3]))
 
     conn.executemany('INSERT INTO solarsystems VALUES (?, ?, ?, ?)', solarsystems)
+
+with sqlite3.connect(db_filename_user) as conn:
+    with open(schema_filename_user, 'rt') as f:
+        schema = f.read()
+    conn.executescript(schema)

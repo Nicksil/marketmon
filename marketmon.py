@@ -5,6 +5,7 @@ import sys
 import requests
 
 """
+CREST market item look-up template:
 https://public-crest.eveonline.com/market/10000002/orders/sell/?type=https://public-crest.eveonline.com/types/683/
 """
 
@@ -31,11 +32,12 @@ def query_db(query):
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
         cursor.execute(query)
-        return cursor.fetchall()
+        return cursor.fetchone()
 
 
 def construct_url(region_id, type_id, buy_or_sell):
-    return "{baseurl}market/{regionid}/orders/{buyorsell}/?type={baseurl}types/{typeid}/".format(baseurl=CREST_BASE_URL, regionid=region_id, buyorsell=buy_or_sell, typeid=type_id)
+    return "{baseurl}market/{regionid}/orders/{buyorsell}/?type={baseurl}types/{typeid}/".format(
+        baseurl=CREST_BASE_URL, regionid=region_id, buyorsell=buy_or_sell, typeid=type_id)
 
 
 def fetch_price_data(url):
@@ -48,12 +50,12 @@ def main(args):
         region_name = args.region.capitalize()
         location_query_str = """SELECT regionid FROM regions WHERE regionname='{}'""".format(region_name)
         location_query = query_db(location_query_str)
-        region_id = location_query[0][0]
+        region_id = location_query[0]
     elif args.solarsystem:
         solarsystem_name = args.solarsystem.capitalize()
         location_query_str = """SELECT regionid FROM solarsystems WHERE solarsystemname='{}'""".format(solarsystem_name)
         location_query = query_db(location_query_str)
-        region_id = location_query[0][0]
+        region_id = location_query[0]
     else:
         sys.exit("ERROR: Please include a region or solar system to monitor.")
 
@@ -69,21 +71,17 @@ def main(args):
 
     type_query_str = """SELECT typeid FROM invTypes WHERE typename LIKE '%{}%'""".format(item)
     type_query = query_db(type_query_str)
-    type_id = type_query[0][0]
+    type_id = type_query[0]
 
     url = construct_url(region_id, type_id, buy_or_sell)
-    print(url)
-    # price_data = fetch_price_data(url)
 
-    # prices = []
-    # for item in price_data['items']:
-        # if location.capitalize() in item['location']['name']:
-            # prices.append(item['price'])
+    price_data = fetch_price_data(url)
+    prices = sorted([i['price'] for i in price_data['items']])
 
-    # prices = sorted(prices)
-    # lowest_sell = prices[0]
-    # print('{:,.2f}'.format(lowest_sell))
-    pass
+    if args.buy:
+        print("{:,.2f}".format(prices[-1]))
+    else:
+        print("{:,.2f}".format(prices[0]))
 
 if __name__ == '__main__':
     args = parse_args()
