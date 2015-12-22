@@ -73,14 +73,14 @@ def main():
             else:
                 current_price = prices[0]
 
-            print("Is current market price ({:,.2f}) >= your price ({:,.2f})?\t{}".format(current_price, task_data['price'], current_price >= task_data['price']))
+            print("{}: Is current market price ({:,.2f}) >= your price ({:,.2f})? {}".format(task_data['type_name'], current_price, task_data['price'], current_price >= task_data['price']))
         else:
             if task_data['order_type'] == "buy":
                 current_price = prices[-1]
             else:
                 current_price = prices[0]
 
-            print("Is current market price ({:,.2f}) <= your price ({:,.2f})?\t{}".format(current_price, task_data['price'], current_price <= task_data['price']))
+            print("{}: Is current market price ({:,.2f}) <= your price ({:,.2f})? {}".format(task_data['type_name'], current_price, task_data['price'], current_price <= task_data['price']))
 
 if __name__ == '__main__':
     main()
