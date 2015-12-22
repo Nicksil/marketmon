@@ -1,4 +1,5 @@
 import argparse
+import os
 import sqlite3
 import sys
 
@@ -6,6 +7,7 @@ from eve import get_region_data
 from eve import get_solarsystem_data
 from eve import get_type_data
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_NAME_EVE = "eve.db"
 DB_NAME_TASKS = "tasks.db"
 
@@ -26,7 +28,7 @@ def parse_args():
 
 
 def save_task(data):
-    with sqlite3.connect(DB_NAME_TASKS) as conn:
+    with sqlite3.connect(os.path.join(BASE_DIR, 'db', DB_NAME_TASKS)) as conn:
         cursor = conn.cursor()
         cursor.execute('INSERT INTO tasks (price, typeid, typename, locationtype, regionid, locationname, ordertype, interest) \
                         VALUES (:price, :typeid, :typename, :locationtype, :regionid, :locationname, :ordertype, :interest)', data)

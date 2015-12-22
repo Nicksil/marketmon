@@ -1,4 +1,5 @@
 import sqlite3
+import os
 
 import requests
 
@@ -7,12 +8,13 @@ Given an item, region or solar system, buy or sell, and a price to compare, fetc
 compare real-time market data to price point. If market price meets price point's goal, send notification.
 """
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CREST_BASE_URL = "https://public-crest.eveonline.com/"
 DB_NAME_TASKS = "tasks.db"
 
 
 def get_tasks():
-    with sqlite3.connect(DB_NAME_TASKS) as conn:
+    with sqlite3.connect(os.path.join(BASE_DIR, 'db', DB_NAME_TASKS)) as conn:
         cursor = conn.cursor()
         cursor.execute("""SELECT * FROM tasks""")
 

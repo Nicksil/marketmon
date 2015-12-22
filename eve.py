@@ -1,10 +1,12 @@
 import sqlite3
+import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_NAME = "eve.db"
 
 
 def query_db(query):
-    with sqlite3.connect(DB_NAME) as conn:
+    with sqlite3.connect(os.path.join(BASE_DIR, 'db', DB_NAME)) as conn:
         cursor = conn.cursor()
         cursor.execute(query)
 
