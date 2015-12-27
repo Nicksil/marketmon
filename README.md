@@ -1,3 +1,10 @@
+To-Do
+=====
+
+- Delete entries/tasks
+- Setup notifications (email, etc.)
+- Format console output
+
 Scratch Pad
 ===========
 
